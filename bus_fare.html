@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Avelino's Tours</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      background-color: #004080;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 32px;
+      font-weight: bold;
+    }
+
+    nav {
+      background-color: #0066cc;
+      display: flex;
+      justify-content: center;
+      padding: 10px 0;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 18px;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+  <header>Avelino's Tours</header>
+
+  <nav>
+    <a href="hello.html">Home</a>
+    <a href="C:/Users/User/Desktop/MyFirstWebsite/bus_fare.html">Bus Fare</a>
+    <a href="#">Packages</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow mt-8">
+    <h2 class="text-2xl font-bold mb-6 text-center">Departure Pricing</h2>
+
+    <form class="space-y-4" onsubmit="event.preventDefault(); calculatePrice();">
+      <!-- 👇 START: Passenger Counts -->
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label for="numKids" class="block mb-1 font-medium">Number of Kids</label>
+          <input type="number" id="numKids" class="w-full border p-2 rounded" value="0" min="0">
+        </div>
+        <div>
+          <label for="numAdults" class="block mb-1 font-medium">Number of Adults</label>
+          <input type="number" id="numAdults" class="w-full border p-2 rounded" value="1" min="0">
+        </div>
+        <div>
+          <label for="numElderly" class="block mb-1 font-medium">Number of Elderly</label>
+          <input type="number" id="numElderly" class="w-full border p-2 rounded" value="0" min="0">
+        </div>
+      </div>
+      <!-- 👆 END: Passenger Counts -->
+
+      <div class="grid grid-cols-3 gap-6">
+        <!-- Departure Column -->
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Departure</h3>
+          <label for="departState" class="block mb-1">State</label>
+          <select id="departState" class="border p-2 rounded w-full mb-4" onchange="updateCityOptions('departState', 'departCity')">
+            <option value="">Select a state</option>
+            <option value="California">California</option>
+            <option value="Arizona">Arizona</option>
+            <option value="Chihuahua">Chihuahua</option>
+            <option value="Durango">Durango</option>
+            <option value="Zacatecas">Zacatecas</option>
+          </select>
+
+          <label for="departCity" class="block mb-1">City</label>
+          <select id="departCity" class="border p-2 rounded w-full">
+            <option value="">Select a city</option>
+          </select>
+        </div>
+
+        <!-- Destination Column -->
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Destination</h3>
+          <label for="arrivalState" class="block mb-1">State</label>
+          <select id="arrivalState" class="border p-2 rounded w-full mb-4" onchange="updateCityOptions('arrivalState', 'arrivalCity')">
+            <option value="">Select a state</option>
+            <option value="California">California</option>
+            <option value="Arizona">Arizona</option>
+            <option value="Chihuahua">Chihuahua</option>
+            <option value="Durango">Durango</option>
+            <option value="Zacatecas">Zacatecas</option>
+          </select>
+
+          <label for="arrivalCity" class="block mb-1">City</label>
+          <select id="arrivalCity" class="border p-2 rounded w-full">
+            <option value="">Select a city</option>
+          </select>
+        </div>
+
+        <!-- Dates Column -->
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Dates</h3>
+          <label class="block mb-1">Trip Type</label>
+          <div class="flex gap-2 mb-4">
+            <label class="inline-flex items-center">
+              <input type="radio" name="tripType" value="oneWay" checked onchange="toggleReturnDate()" class="mr-2">
+              One Way
+            </label>
+            <label class="inline-flex items-center">
+              <input type="radio" name="tripType" value="roundTrip" onchange="toggleReturnDate()" class="mr-2">
+              Round Trip
+            </label>
+          </div>
+
+          <label for="departureDate" class="block mb-1">Departure Date</label>
+          <input type="date" id="departureDate" class="w-full border p-2 rounded mb-4" required>
+
+          <div id="returnDateContainer" style="display: none;">
+            <label for="returnDate" class="block mb-1">Return Date</label>
+            <input type="date" id="returnDate" class="w-full border p-2 rounded">
+          </div>
+        </div>
+      </div>
+
+      <!-- 🔽 ADD THIS BELOW THE ABOVE FORM SECTION 🔽 -->
+      <div class="text-center mt-6">
+        <label class="block mb-1 font-semibold text-lg">Total Price</label>
+        <div id="priceOutput" class="inline-block border p-3 rounded bg-gray-100 text-xl font-bold">
+          $0.00
+        </div>
+      </div>
+
+
+      <!-- Submit Button -->
+      <div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
+          Submit
+        </button>
+      </div>
+    </form>
+  </div>
+
+
+  <!-- JavaScript -->
+  <script>
+    const citiesByCountry = {
+      USA: {
+        California: [
+          "Fontana", "Riverside", "San Bernardino", "Ontario", "Pomona",
+          "Los Angeles", "Bakersfield", "Fresno", "Modesto", "Stockton",
+          "Sacramento", "Vajello", "Dos Palos", "Santa Maria", "Paso Robles",
+          "San Jose", "Salinas", "Oakland", "Santa Barbara"
+        ],
+        Arizona: ["Phoenix", "Tucson"]
+      },
+      Mexico: {
+        Chihuahua: ["Ciudad Juárez", "Chihuahua City", "Delicias"],
+        Durango: ["Durango City", "Gómez Palacio", "Lerdo"],
+        Zacatecas: ["Zacatecas City", "Guadalupe", "Fresnillo"]
+      }
+    };
+
+    const pricingTable = {
+      "Fontana": { Chihuahua: 110, Durango: 120, Zacatecas: 130 },
+      "Riverside": { Chihuahua: 110, Durango: 120, Zacatecas: 130 },
+      "San Bernardino": { Chihuahua: 110, Durango: 120, Zacatecas: 130 },
+      "Ontario": { Chihuahua: 110, Durango: 120, Zacatecas: 130 },
+      "Los Angeles": { Chihuahua: 110, Durango: 120, Zacatecas: 130 },
+      "Bakersfield": { Chihuahua: 120, Durango: 130, Zacatecas: 140 },
+      "Fresno": { Chihuahua: 120, Durango: 130, Zacatecas: 140 },
+      "Santa Barbara": { Chihuahua: 120, Durango: 130, Zacatecas: 140 },
+      "Santa Maria": { Chihuahua: 125, Durango: 130, Zacatecas: 140 },
+      "Paso Robles": { Chihuahua: 130, Durango: 140, Zacatecas: 150 },
+      "Salinas": { Chihuahua: 140, Durango: 160, Zacatecas: 170 },
+      "Dos Palos": { Chihuahua: 140, Durango: 160, Zacatecas: 170 },
+      "Modesto": { Chihuahua: 160, Durango: 170, Zacatecas: 180 },
+      "San Jose": { Chihuahua: 160, Durango: 170, Zacatecas: 180 },
+      "Oakland": { Chihuahua: 170, Durango: 200, Zacatecas: 220 },
+      "Stockton": { Chihuahua: 160, Durango: 200, Zacatecas: 220 },
+      "Vajello": { Chihuahua: 170, Durango: 210, Zacatecas: 230 },
+      "Sacramento": { Chihuahua: 180, Durango: 220, Zacatecas: 240 },
+      "Phoenix": { Chihuahua: 100, Durango: 115, Zacatecas: 130 },
+      "Tucson": { Chihuahua: 100, Durango: 110, Zacatecas: 130 }
+    };
+
+    function updateCityOptions(stateId, cityId) {
+      const stateSelect = document.getElementById(stateId);
+      const citySelect = document.getElementById(cityId);
+      const selectedState = stateSelect.value;
+
+      citySelect.innerHTML = '<option value="">Select a city</option>';
+
+      for (const country in citiesByCountry) {
+        if (citiesByCountry[country][selectedState]) {
+          citiesByCountry[country][selectedState].forEach(city => {
+            const option = document.createElement("option");
+            option.value = city;
+            option.textContent = city;
+            citySelect.appendChild(option);
+          });
+          break;
+        }
+      }
+    }
+
+
+/**
+ * Get fare price regardless of order (USA → Mexico or Mexico → USA)
+ * @returns {number|null} - Price or null if not found
+ */
+function getFare() {
+  const departureCity = document.getElementById("departCity").value;
+  const departureState = document.getElementById("departState").value;
+  const destinationCity = document.getElementById("arrivalCity").value;
+  const destinationState = document.getElementById("arrivalState").value;
+  
+  // Try direct lookup (USA → Mexico)
+  if (pricingTable[departureCity] && pricingTable[departureCity][destinationState] !== undefined) {
+    return pricingTable[departureCity][destinationState];
+  }
+
+  // Try reversed lookup (Mexico → USA)
+  for (const [usaCity, mexicoStates] of Object.entries(pricingTable)) {
+    if (mexicoStates[departureState] !== undefined && usaCity === destinationCity) {
+      return mexicoStates[departureState];
+    }
+  }
+
+  return null; // Not found
+}
+
+  function calculatePrice() {
+    const basePrice = getFare();
+    const priceOutput = document.getElementById("priceOutput");
+    const tripType = document.querySelector('input[name="tripType"]:checked').value;
+
+    const numKids = parseInt(document.getElementById("numKids").value) * 0.5 || 0;
+    const numAdults = parseInt(document.getElementById("numAdults").value) || 0;
+    const numElderly = parseInt(document.getElementById("numElderly").value) * 0.9 || 0;
+
+    const totalPassengers = numKids + numAdults + numElderly;
+
+    if (basePrice !== null && totalPassengers > 0) {
+      const total = basePrice * (tripType === "roundTrip" ? 2 : 1) * totalPassengers;
+      priceOutput.textContent = `$${total.toFixed(2)}`;
+    } else {
+      priceOutput.textContent = "N/A";
+    }
+  }
+
+
+  function toggleReturnDate() {
+  const tripType = document.querySelector('input[name="tripType"]:checked').value;
+  const returnDateDiv = document.getElementById("returnDateContainer");
+  returnDateDiv.style.display = tripType === "roundTrip" ? "block" : "none";
+}
+  </script>
+</body>
+</html>
