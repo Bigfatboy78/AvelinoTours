@@ -75,48 +75,48 @@ document.addEventListener('DOMContentLoaded', async () => {
  * @returns {number|null} - Price or null if not found
  */
 function getFare() {
-const departureCity = document.getElementById("departCity").value;
-const departureState = document.getElementById("departState").value;
-const destinationCity = document.getElementById("arrivalCity").value;
-const destinationState = document.getElementById("arrivalState").value;
+    const departureCity = document.getElementById("departCity").value;
+    const departureState = document.getElementById("departState").value;
+    const destinationCity = document.getElementById("arrivalCity").value;
+    const destinationState = document.getElementById("arrivalState").value;
 
-// Try direct lookup (USA → Mexico)
-if (pricingTable[departureCity] && pricingTable[departureCity][destinationState] !== undefined) {
-return pricingTable[departureCity][destinationState];
-}
+    // Try direct lookup (USA → Mexico)
+    if (pricingTable[departureCity] && pricingTable[departureCity][destinationState] !== undefined) {
+    return pricingTable[departureCity][destinationState];
+    }
 
-// Try reversed lookup (Mexico → USA)
-for (const [usaCity, mexicoStates] of Object.entries(pricingTable)) {
-if (mexicoStates[departureState] !== undefined && usaCity === destinationCity) {
-    return mexicoStates[departureState];
-}
-}
+    // Try reversed lookup (Mexico → USA)
+    for (const [usaCity, mexicoStates] of Object.entries(pricingTable)) {
+        if (mexicoStates[departureState] !== undefined && usaCity === destinationCity) {
+            return mexicoStates[departureState];
+        }
+    }
 
-return null; // Not found
+    return null; // Not found
 }
 
 function calculatePrice() {
-const basePrice = getFare();
-const priceOutput = document.getElementById("priceOutput");
-const tripType = document.querySelector('input[name="tripType"]:checked').value;
+    const basePrice = getFare();
+    const priceOutput = document.getElementById("priceOutput");
+    const tripType = document.querySelector('input[name="tripType"]:checked').value;
 
-const numKids = parseInt(document.getElementById("numKids").value) * 0.5 || 0;
-const numAdults = parseInt(document.getElementById("numAdults").value) || 0;
-const numElderly = parseInt(document.getElementById("numElderly").value) * 0.9 || 0;
+    const numKids = parseInt(document.getElementById("numKids").value) * 0.5 || 0;
+    const numAdults = parseInt(document.getElementById("numAdults").value) || 0;
+    const numElderly = parseInt(document.getElementById("numElderly").value) * 0.9 || 0;
 
-const totalPassengers = numKids + numAdults + numElderly;
+    const totalPassengers = numKids + numAdults + numElderly;
 
-if (basePrice !== null && totalPassengers > 0) {
-    const total = basePrice * (tripType === "roundTrip" ? 2 : 1) * totalPassengers;
-    priceOutput.textContent = `$${total.toFixed(2)}`;
-} else {
-    priceOutput.textContent = "N/A";
-}
+    if (basePrice !== null && totalPassengers > 0) {
+        const total = basePrice * (tripType === "roundTrip" ? 2 : 1) * totalPassengers;
+        priceOutput.textContent = `$${total.toFixed(2)}`;
+    } else {
+        priceOutput.textContent = "N/A";
+    }
 }
 
 
 function toggleReturnDate() {
-const tripType = document.querySelector('input[name="tripType"]:checked').value;
-const returnDateDiv = document.getElementById("returnDateContainer");
-returnDateDiv.style.display = tripType === "roundTrip" ? "block" : "none";
+    const tripType = document.querySelector('input[name="tripType"]:checked').value;
+    const returnDateDiv = document.getElementById("returnDateContainer");
+    returnDateDiv.style.display = tripType === "roundTrip" ? "block" : "none";
 }
