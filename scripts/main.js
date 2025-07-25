@@ -2,30 +2,43 @@ import { fetchCities, fetchStates } from './city_fetch.js';
 import { setupStateCityDropdowns } from './event.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const cities = await fetchCities();
-  const states = await fetchStates();
+    
+    toggleReturnDate();
 
-  console.log("Fetched Cities:", cities);
-  console.log("Fetched States:", states);
-
-  const arrivalSelect = document.getElementById('arrivalState');
-  const departureSelect = document.getElementById('departState');
-
-  states.forEach(state => {
-    // Create separate <option> elements for each dropdown
-    const arrivalOption = document.createElement('option');
-    arrivalOption.value = state.state_name;
-    arrivalOption.textContent = state.state_name;
-
-    const departureOption = document.createElement('option');
-    departureOption.value = state.state_name;
-    departureOption.textContent = state.state_name;
-
-    arrivalSelect.appendChild(arrivalOption);
-    departureSelect.appendChild(departureOption);
+    // Ensure trip type radio buttons are wired
+    document.querySelectorAll('.trip-radio').forEach(radio => {
+        radio.addEventListener('change', toggleReturnDate);
     });
+        
+    const cities = await fetchCities();
+    const states = await fetchStates();
 
-  function buildCitiesByCountry(states, cities) {
+    console.log("Fetched Cities:", cities);
+    console.log("Fetched States:", states);
+
+    const arrivalSelect = document.getElementById('arrivalState');
+    const departureSelect = document.getElementById('departState');
+
+    states.forEach(state => {
+        // Create separate <option> elements for each dropdown
+        const arrivalOption = document.createElement('option');
+        arrivalOption.value = state.state_name;
+        arrivalOption.textContent = state.state_name;
+
+        const departureOption = document.createElement('option');
+        departureOption.value = state.state_name;
+        departureOption.textContent = state.state_name;
+
+        arrivalSelect.appendChild(arrivalOption);
+        departureSelect.appendChild(departureOption);
+        });
+
+    const citiesByCountry = buildCitiesByCountry(states, cities);
+    const pricingTable = buildPricingTable(cities);
+    setupStateCityDropdowns(citiesByCountry, states);
+});
+
+function buildCitiesByCountry(states, cities) {
     const citiesByCountry = {};
 
     // First, group states by country
@@ -58,17 +71,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     return citiesByCountry;
-  }
+}
 
-  const citiesByCountry = buildCitiesByCountry(states, cities);
+function buildPricingTable(cities){
+    const pricingTable = {};
 
-  setupStateCityDropdowns(citiesByCountry, states);
-});
+    cities.forEach(city => {
+        pricingTable[city.city_id] = {
+            "Chihuahua": city.price_to_chihuahua,
+            "Durango": city.price_to_durango,
+            "Zacatecas": city.price_to_zacatecas
+        };
+    });
 
-
-// const pricingTable = {
-
-// };
+    return pricingTable;
+}
 
 /**
  * Get fare price regardless of order (USA → Mexico or Mexico → USA)
@@ -82,7 +99,7 @@ function getFare() {
 
     // Try direct lookup (USA → Mexico)
     if (pricingTable[departureCity] && pricingTable[departureCity][destinationState] !== undefined) {
-    return pricingTable[departureCity][destinationState];
+        return pricingTable[departureCity][destinationState];
     }
 
     // Try reversed lookup (Mexico → USA)
@@ -114,9 +131,18 @@ function calculatePrice() {
     }
 }
 
+let flatpickrInstance = null;
 
 function toggleReturnDate() {
-    const tripType = document.querySelector('input[name="tripType"]:checked').value;
-    const returnDateDiv = document.getElementById("returnDateContainer");
-    returnDateDiv.style.display = tripType === "roundTrip" ? "block" : "none";
+    const selectedTripType = document.querySelector('input[name="tripType"]:checked').value;
+
+  if (flatpickrInstance) {
+    flatpickrInstance.destroy();
+  }
+
+  flatpickrInstance = flatpickr("#datePicker", {
+    mode: selectedTripType === "roundTrip" ? "range" : "single",
+    dateFormat: "M-d (D)",
+  });
 }
+
