@@ -1,11 +1,17 @@
-import { fetchCities, fetchStates } from './city_fetch.js';
+import { fetchCities, fetchStates, fetchSchedule, fetchPricing } from './fetch.js';
 import { calculatePrice, setupStateCityDropdowns } from './event.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const cities = await fetchCities();
-  const states = await fetchStates();
+  const [cities, states, schedule, info] = await Promise.all([
+      fetchCities(),
+      fetchStates(),
+      fetchSchedule(),
+      fetchPricing()
+    ]);
   console.log("Fetched Cities:", cities);
   console.log("Fetched States:", states);
+  console.log("Fetched Schedule", schedule);
+  console.log("Fetched Info", info);
 
   const arrivalSelect = document.getElementById('arrivalState');
   const departureSelect = document.getElementById('departState');
