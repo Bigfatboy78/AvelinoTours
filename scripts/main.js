@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('fareForm');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    calculatePrice(pricingTable);
+    calculatePrice(pricingTable, info);
   });
   
 });

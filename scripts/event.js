@@ -8,20 +8,31 @@ export function setupStateCityDropdowns(citiesByCountry, states) {
   });
 }
 
-export function calculatePrice(pricingTable) {
+export function calculatePrice(pricingTable, pricingInfo) {
   console.log("Running calculatePrice...");
   const basePrice = getFare(pricingTable);
   const priceOutput = document.getElementById("priceOutput");
   const tripType = document.querySelector('input[name="tripType"]:checked').value;
 
-  const numKids = parseInt(document.getElementById("numKids").value) * 0.5 || 0;
-  const numAdults = parseInt(document.getElementById("numAdults").value) || 0;
-  const numElderly = parseInt(document.getElementById("numElderly").value) * 0.9 || 0;
+  let oneWayCost = 0;
+  let elementName;
+  pricingInfo.forEach(ageRange => {
+    switch(ageRange.ticket_id){
+      case "child":
+        elementName = "numKids";
+        break;
+      case "elderly":
+        elementName = "numElderly";
+        break;
+      default:
+        elementName = "numAdults";
+    }
+    oneWayCost += parseInt(document.getElementById(elementName).value) * (100 - ageRange.price_reduction_percentage)/100 || 0;
+  });
 
-  const totalPassengers = numKids + numAdults + numElderly;
 
-  if (basePrice !== null && totalPassengers > 0) {
-      const total = basePrice * (tripType === "roundTrip" ? 2 : 1) * totalPassengers;
+  if (basePrice !== null && oneWayCost > 0) {
+      const total = basePrice * (tripType === "roundTrip" ? 2 : 1) * oneWayCost;
       priceOutput.textContent = `$${total.toFixed(2)}`;
   } else {
       priceOutput.textContent = "N/A";
