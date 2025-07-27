@@ -12,8 +12,6 @@
   <!-- Flatpickr JS -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- JavaScript -->
-  <script type="module" src="./scripts/main.js"></script>
   <style>
     body {
       margin: 0;
@@ -61,9 +59,9 @@
   </nav>
 
   <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow mt-8">
-    <h2 class="text-2xl font-bold mb-6 text-center">Departure Pricing</h2>
+    <h2 class="text-2xl font-bold mb-6 text-center">Ticket Pricing</h2>
 
-    <form class="space-y-4" onsubmit="event.preventDefault(); calculatePrice();">
+    <form id="fareForm" class="space-y-4">
       <!-- 👇 START: Passenger Counts -->
       <div class="grid grid-cols-3 gap-4">
         <div>
@@ -153,5 +151,7 @@
       </div>
     </div>
   </div>
+  <!-- JavaScript -->
+  <script type="module" src="./scripts/main.js"></script>
 </body>
 </html>
