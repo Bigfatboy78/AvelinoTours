@@ -39,6 +39,24 @@ export function calculatePrice(pricingTable, pricingInfo) {
   }
 }
 
+export function setupCityChangeHandlers(schedule) {
+  const departCitySelect = document.getElementById('departCity');
+  const arrivalCitySelect = document.getElementById('arrivalCity');
+
+  function tryFilterSchedule() {
+    const departureCity = departCitySelect.value;
+    const destinationCity = arrivalCitySelect.value;
+
+    // Only run if both cities are selected
+    if (departureCity && destinationCity) {
+      filterSchedule(schedule, departureCity, destinationCity);
+    }
+  }
+
+  departCitySelect.addEventListener('change', tryFilterSchedule);
+  arrivalCitySelect.addEventListener('change', tryFilterSchedule);
+}
+
 /**
  * 
  * @param {*} stateId 
@@ -119,3 +137,36 @@ function getFare(pricingTable) {
   return null;
 }
 
+/**
+ * 
+ * @param {*} schedule 
+ * @param {string} departureCity 
+ * @param {string} destinationCity 
+ */
+function filterSchedule(schedule, departureCity, destinationCity){
+  const deptCitiesOptions = schedule.filter(
+    stop => stop.city_id === departureCity
+  );
+  const destCityOptions = schedule.filter(
+    stop => stop.city_id === destinationCity
+  );
+
+  let matchedDept = null;
+  let matchedDest = null;
+
+  for (const dept of deptCitiesOptions) {
+    const destOption = destCityOptions.find(dest =>
+      dest.direction === dept.direction &&
+      dest.stop_id > dept.stop_id
+    );
+
+    if (destOption) {
+      matchedDept = dept;
+      matchedDest = destOption;
+      break; // ✅ Found a match, exit the loop
+    }
+  }
+
+  console.log("Matched departure:", matchedDept);
+  console.log("Matched destination:", matchedDest);
+}

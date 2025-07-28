@@ -1,5 +1,5 @@
 import { fetchCities, fetchStates, fetchSchedule, fetchPricing } from './fetch.js';
-import { calculatePrice, setupStateCityDropdowns } from './event.js';
+import { calculatePrice, setupCityChangeHandlers, setupStateCityDropdowns } from './event.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const [cities, states, schedule, info] = await Promise.all([
@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const arrivalSelect = document.getElementById('arrivalState');
   const departureSelect = document.getElementById('departState');
+  
+  setupCityChangeHandlers(schedule);
 
   states.forEach(state => {
       // Create separate <option> elements for each dropdown
@@ -129,4 +131,6 @@ function toggleReturnDate() {
     dateFormat: "M-d (D)",
   });
 }
+
+
 
