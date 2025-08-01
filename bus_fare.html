@@ -125,14 +125,24 @@
             </label>
           </div>
 
-          <label for="datePicker" class="block mb-1">Travel Date(s)</label>
+          <label for="departureDate" class="block mb-1">Departure Date</label>
           <input
             type="text"
-            id="datePicker"
-            class="border p-2 rounded w-full mb-4"
-            placeholder="Select travel date(s)"
+            id="departureDate"
+            class="w-full border p-2 rounded mb-4"
+            placeholder="Select departure date"
             required
-          />
+          >
+
+          <div id="returnDateContainer" class="hidden">
+            <label for="returnDate" class="block mb-1">Return Date</label>
+            <input
+              type="text"
+              id="returnDate"
+              class="w-full border p-2 rounded mb-4"
+              placeholder="Select return date"
+            >
+          </div>
         </div>
 
       </div>

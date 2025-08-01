@@ -1,3 +1,4 @@
+import { updateCalendarByDayOfWeek } from "./calendar.js";
 import { fetchCities, fetchStates, fetchSchedule, fetchPricing } from './fetch.js';
 import { calculatePrice, setupCityChangeHandlers, setupStateCityDropdowns } from './event.js';
 
@@ -16,7 +17,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   const arrivalSelect = document.getElementById('arrivalState');
   const departureSelect = document.getElementById('departState');
   
-  setupCityChangeHandlers(schedule);
+  let lastDepartDOW, lastDestDOW;
+  setupCityChangeHandlers(schedule, (departDOW, destDOW) => {
+    lastDepartDOW = departDOW;
+    lastDestDOW = destDOW;
+    const tripType = document.querySelector('input[name="tripType"]:checked').value;
+    updateCalendarByDayOfWeek(departDOW, destDOW, tripType);
+  });
+
+  document.querySelectorAll('input[name="tripType"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const tripType = radio.value;
+      if (lastDepartDOW && lastDestDOW) {
+        updateCalendarByDayOfWeek(lastDepartDOW, lastDestDOW, tripType);
+      }
+    });
+  });
 
   states.forEach(state => {
       // Create separate <option> elements for each dropdown
@@ -30,18 +46,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       arrivalSelect.appendChild(arrivalOption);
       departureSelect.appendChild(departureOption);
-      });
+  });
 
   const citiesByCountry = buildCitiesByCountry(states, cities);
   const pricingTable = buildPricingTable(cities, states);
   console.log("Listed pricingTable: ", pricingTable)
   setupStateCityDropdowns(citiesByCountry, states);
-
-  toggleReturnDate();
-  // Ensure trip type radio buttons are wired
-  document.querySelectorAll('.trip-radio').forEach(radio => {
-      radio.addEventListener('change', toggleReturnDate);
-  });
 
   const form = document.getElementById('fareForm');
   form.addEventListener('submit', (event) => {
@@ -114,23 +124,6 @@ function buildPricingTable(cities, states){
     return pricingTable;
 }
 
-let flatpickrInstance = null;
-/**
- * Changes the mode variant of the calendar, flipping between single date and value range depending
- * on the selected Radio Button
- */
-function toggleReturnDate() {
-    const selectedTripType = document.querySelector('input[name="tripType"]:checked').value;
-
-  if (flatpickrInstance) {
-    flatpickrInstance.destroy();
-  }
-
-  flatpickrInstance = flatpickr("#datePicker", {
-    mode: selectedTripType === "roundTrip" ? "range" : "single",
-    dateFormat: "M-d (D)",
-  });
-}
 
 
 

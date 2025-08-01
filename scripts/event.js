@@ -39,7 +39,7 @@ export function calculatePrice(pricingTable, pricingInfo) {
   }
 }
 
-export function setupCityChangeHandlers(schedule) {
+export function setupCityChangeHandlers(schedule, onCitiesSelected) {
   const departCitySelect = document.getElementById('departCity');
   const arrivalCitySelect = document.getElementById('arrivalCity');
 
@@ -47,9 +47,15 @@ export function setupCityChangeHandlers(schedule) {
     const departureCity = departCitySelect.value;
     const destinationCity = arrivalCitySelect.value;
 
-    // Only run if both cities are selected
     if (departureCity && destinationCity) {
-      filterSchedule(schedule, departureCity, destinationCity);
+      const [matchingDept, matchingDest] = filterSchedule(schedule, departureCity, destinationCity);
+
+      const [returnFromDest, returnToDepart] = filterSchedule(schedule, destinationCity, departureCity);
+
+      // Call the callback with day_of_week values
+      if (matchingDept && returnFromDest) {
+        onCitiesSelected(matchingDept.day_of_week, returnFromDest.day_of_week);
+      }
     }
   }
 
@@ -169,4 +175,6 @@ function filterSchedule(schedule, departureCity, destinationCity){
 
   console.log("Matched departure:", matchedDept);
   console.log("Matched destination:", matchedDest);
+
+  return [ matchedDept, matchedDest ];
 }
