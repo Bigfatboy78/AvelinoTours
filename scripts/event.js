@@ -30,6 +30,17 @@ export function calculatePrice(pricingTable, pricingInfo) {
     oneWayCost += parseInt(document.getElementById(elementName).value) * (100 - ageRange.price_reduction_percentage)/100 || 0;
   });
 
+  function buildSummary(){
+    
+  }
+
+  function showTripSummary(summaryHtml) {
+    const summaryDiv = document.getElementById("tripSummary");
+    const contentDiv = document.getElementById("summaryContent");
+
+    contentDiv.innerHTML = summaryHtml;
+    summaryDiv.classList.remove("hidden");
+  }
 
   if (basePrice !== null && oneWayCost > 0) {
       const total = basePrice * (tripType === "roundTrip" ? 2 : 1) * oneWayCost;
@@ -54,7 +65,7 @@ export function setupCityChangeHandlers(schedule, onCitiesSelected) {
 
       // Call the callback with day_of_week values
       if (matchingDept && returnFromDest) {
-        onCitiesSelected(matchingDept.day_of_week, returnFromDest.day_of_week);
+        onCitiesSelected(matchingDept, returnFromDest);
       }
     }
   }

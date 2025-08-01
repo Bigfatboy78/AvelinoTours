@@ -17,19 +17,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const arrivalSelect = document.getElementById('arrivalState');
   const departureSelect = document.getElementById('departState');
   
-  let lastDepartDOW, lastDestDOW;
-  setupCityChangeHandlers(schedule, (departDOW, destDOW) => {
-    lastDepartDOW = departDOW;
-    lastDestDOW = destDOW;
+  let lastDepart, lastDest;
+  setupCityChangeHandlers(schedule, (depart, dest) => {
+    lastDepart = depart;
+    lastDest = dest;
     const tripType = document.querySelector('input[name="tripType"]:checked').value;
-    updateCalendarByDayOfWeek(departDOW, destDOW, tripType);
+    updateCalendarByDayOfWeek(depart, dest, tripType);
   });
 
   document.querySelectorAll('input[name="tripType"]').forEach(radio => {
     radio.addEventListener('change', () => {
       const tripType = radio.value;
-      if (lastDepartDOW && lastDestDOW) {
-        updateCalendarByDayOfWeek(lastDepartDOW, lastDestDOW, tripType);
+      if (lastDepart && lastDest) {
+        updateCalendarByDayOfWeek(lastDepart, lastDest, tripType);
       }
     });
   });
