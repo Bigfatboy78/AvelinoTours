@@ -1,3 +1,5 @@
+import { updateSummary } from "./summary.js";
+
 export function setupStateCityDropdowns(citiesByCountry, states) {
   document.getElementById('arrivalState').addEventListener('change', () => {
     updateCityOptions('arrivalState', 'arrivalCity', citiesByCountry, states);
@@ -30,18 +32,6 @@ export function calculatePrice(pricingTable, pricingInfo) {
     oneWayCost += parseInt(document.getElementById(elementName).value) * (100 - ageRange.price_reduction_percentage)/100 || 0;
   });
 
-  function buildSummary(){
-    
-  }
-
-  function showTripSummary(summaryHtml) {
-    const summaryDiv = document.getElementById("tripSummary");
-    const contentDiv = document.getElementById("summaryContent");
-
-    contentDiv.innerHTML = summaryHtml;
-    summaryDiv.classList.remove("hidden");
-  }
-
   if (basePrice !== null && oneWayCost > 0) {
       const total = basePrice * (tripType === "roundTrip" ? 2 : 1) * oneWayCost;
       priceOutput.textContent = `$${total.toFixed(2)}`;
@@ -50,7 +40,7 @@ export function calculatePrice(pricingTable, pricingInfo) {
   }
 }
 
-export function setupCityChangeHandlers(schedule, onCitiesSelected) {
+export function setupCityChangeHandlers(schedule, onCitiesSelected, reset) {
   const departCitySelect = document.getElementById('departCity');
   const arrivalCitySelect = document.getElementById('arrivalCity');
 
@@ -66,6 +56,15 @@ export function setupCityChangeHandlers(schedule, onCitiesSelected) {
       // Call the callback with day_of_week values
       if (matchingDept && returnFromDest) {
         onCitiesSelected(matchingDept, returnFromDest);
+        reset();
+        updateSummary({
+          'departDow': matchingDept.day_of_week,
+          'arrivalDow': matchingDest.day_of_week,
+          'returnDepartDow': returnFromDest.day_of_week,
+          'returnArrivalDow': returnToDepart.day_of_week,
+          'calendarDeparture': "",
+          'calendarReturn': ""
+        })
       }
     }
   }

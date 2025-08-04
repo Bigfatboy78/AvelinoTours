@@ -1,6 +1,7 @@
-import { updateCalendarByDayOfWeek } from "./calendar.js";
+import { resetCalendars, updateCalendarByDayOfWeek } from "./calendar.js";
 import { fetchCities, fetchStates, fetchSchedule, fetchPricing } from './fetch.js';
 import { calculatePrice, setupCityChangeHandlers, setupStateCityDropdowns } from './event.js';
+import { showTripSummary, updateSummary } from "./summary.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
   const [cities, states, schedule, info] = await Promise.all([
@@ -23,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     lastDest = dest;
     const tripType = document.querySelector('input[name="tripType"]:checked').value;
     updateCalendarByDayOfWeek(depart, dest, tripType);
-  });
+  }, () => resetCalendars());
 
   document.querySelectorAll('input[name="tripType"]').forEach(radio => {
     radio.addEventListener('change', () => {
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (lastDepart && lastDest) {
         updateCalendarByDayOfWeek(lastDepart, lastDest, tripType);
       }
+      updateSummary({'tripType': tripType});
     });
   });
 
@@ -57,6 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     calculatePrice(pricingTable, info);
+    showTripSummary();
   });
   
 });
