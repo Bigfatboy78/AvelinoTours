@@ -15,6 +15,8 @@ export function updateCalendarByDayOfWeek(departCity, destCity, tripType) {
     Saturday: 6
   };
 
+  let dataStore = document.getElementById('dataStore');
+
   // Destroy existing pickers
   if (departPicker) departPicker.destroy();
   if (returnPicker) returnPicker.destroy();
@@ -28,10 +30,22 @@ export function updateCalendarByDayOfWeek(departCity, destCity, tripType) {
     ],
     minDate: "today",
     onChange: function(selectedDates) {
-        if (tripType === "roundTrip" && returnPicker) {
-          returnPicker.set("minDate", selectedDates[0]);
-        }
-        updateSummary({'calendarDeparture': formatDatePretty(selectedDates[0])});
+      const selectedDeparture = selectedDates[0];
+      dataStore = updateSummary({ 'calendarDeparture': formatDatePretty(selectedDeparture) });
+
+      if (tripType === "roundTrip" && returnPicker) {
+        const departIndex = dayToIndex[departCity.day_of_week];
+        const arrivalIndex = dayToIndex[destCity.day_of_week];
+
+        // Calculate offset in days between departure and arrival
+        let travelDays = (arrivalIndex - departIndex + 7) % 7 || 7;
+
+        const arrivalDate = new Date(selectedDeparture);
+        arrivalDate.setDate(arrivalDate.getDate() + travelDays);
+
+        // Now prevent choosing a return date earlier than actual arrival
+        returnPicker.set("minDate", arrivalDate);
+      }
     }
   });
 
@@ -39,12 +53,27 @@ export function updateCalendarByDayOfWeek(departCity, destCity, tripType) {
   if (tripType === "roundTrip") {
     updateReturnTooltip(departCity.city_id, destCity.city_id, "return");
     document.getElementById("returnDateContainer").classList.remove("hidden");
+
+    // Default arrivalDate = today
+    let arrivalDate = "today";
+
+    const selectedDeparture = departPicker.selectedDates[0];
+    if (selectedDeparture) {
+      const departIndex = dayToIndex[departCity.day_of_week];
+      const arrivalIndex = dayToIndex[destCity.day_of_week];
+
+      // Calculate how many days after departure the arrival happens
+      let travelDays = (arrivalIndex - departIndex + 7) % 7;
+
+      arrivalDate = new Date(selectedDeparture);
+      arrivalDate.setDate(arrivalDate.getDate() + travelDays);
+    }
     returnPicker = flatpickr("#returnDate", {
       dateFormat: "M-d (D)",
       enable: [
         date => date.getDay() === dayToIndex[destCity.day_of_week]
       ],
-      minDate: departPicker.selectedDates[0] || "today", // fallback just in case
+      minDate: arrivalDate,
       onChange: function(selectedDates) {
         updateSummary({'calendarReturn': formatDatePretty(selectedDates[0])});
       }
@@ -107,7 +136,6 @@ export function getNextMatchingDate(baseDateStr, targetDOW) {
   // Find the next date with matching day of week
   const currentDOW = baseDate.getDay();
   let daysUntilMatch = (targetIndex - currentDOW + 7) % 7;
-  if (daysUntilMatch === 0) daysUntilMatch = 7; // Ensure it's after baseDate
 
   const resultDate = new Date(baseDate);
   resultDate.setDate(baseDate.getDate() + daysUntilMatch);
@@ -115,7 +143,6 @@ export function getNextMatchingDate(baseDateStr, targetDOW) {
   // Format output like "Mon Aug 25"
   return formatDatePretty(resultDate);
 }
-
 
 function updateReturnTooltip(departureCity, arrivalCity, direction) {
   const id = direction + "Tooltip"

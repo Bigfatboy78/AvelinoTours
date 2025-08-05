@@ -13,7 +13,7 @@ export function updateSummary(data = null){
   return dataStore;
 }
 
-function buildSummary(){
+function buildSummary(pricingInfo){
     const dataStore = document.getElementById('dataStore').dataset;
     const contentDiv = document.getElementById("summaryContent");
     
@@ -26,12 +26,44 @@ function buildSummary(){
     if (dataStore.tripType === "roundTrip"){
         contentDiv.innerText += `\nDeparting ${destCity}: ${dataStore.calendarReturn} -> Returning to ${deptCity}: ${getNextMatchingDate(dataStore.calendarReturn, dataStore.returnArrivalDow)}`;
     }
+
+    let ticketCounterList = [];
+    let elementName;
+    let ticketText = "\n\nTickets: ";
+
+    pricingInfo.forEach( ageRange => {
+        switch (ageRange.ticket_id) {
+            case "child":
+                elementName = 'numKids';
+                break;
+            case "elderly":
+                elementName = 'numElderly';
+                break;
+            default:
+                elementName = 'numAdults';
+        }
+
+        const checkElement = document.getElementById(elementName).value;
+        if ( checkElement !== '0' ){
+            ticketCounterList.push(`${checkElement}x ${ageRange.ticket_id}`);
+        }
+    });
+
+    ticketCounterList.forEach(entry => {
+        if (entry === ticketCounterList[ticketCounterList.length - 1]) {
+            ticketText += `${entry}`;
+        } else {
+            ticketText += `${entry}, `;
+        }
+    });
+
+    contentDiv.innerText += ticketText;
 }
 
-export function showTripSummary() {
+export function showTripSummary(pricingInfo) {
     const summaryDiv = document.getElementById("tripSummary");
 
-    buildSummary();
+    buildSummary(pricingInfo);
     
     summaryDiv.classList.remove("hidden");
 }

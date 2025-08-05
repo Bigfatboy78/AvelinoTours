@@ -10,10 +10,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       fetchSchedule(),
       fetchPricing()
     ]);
-  console.log("Fetched Cities:", cities);
-  console.log("Fetched States:", states);
-  console.log("Fetched Schedule", schedule);
-  console.log("Fetched Info", info);
+  // console.log("Fetched Cities:", cities);
+  // console.log("Fetched States:", states);
+  // console.log("Fetched Schedule", schedule);
+  // console.log("Fetched Info", info);
 
   const arrivalSelect = document.getElementById('arrivalState');
   const departureSelect = document.getElementById('departState');
@@ -52,14 +52,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const citiesByCountry = buildCitiesByCountry(states, cities);
   const pricingTable = buildPricingTable(cities, states);
-  console.log("Listed pricingTable: ", pricingTable)
+  // console.log("Listed pricingTable: ", pricingTable)
   setupStateCityDropdowns(citiesByCountry, states);
 
   const form = document.getElementById('fareForm');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     calculatePrice(pricingTable, info);
-    showTripSummary();
+    showTripSummary(info);
   });
   
 });
