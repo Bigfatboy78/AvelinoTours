@@ -13,6 +13,14 @@ export function updateSummary(data = null){
   return dataStore;
 }
 
+export function showTripSummary(pricingInfo) {
+    const summaryDiv = document.getElementById("tripSummary");
+
+    buildSummary(pricingInfo);
+    
+    summaryDiv.classList.remove("hidden");
+}
+
 function buildSummary(pricingInfo){
     const dataStore = document.getElementById('dataStore').dataset;
     const contentDiv = document.getElementById("summaryContent");
@@ -21,15 +29,17 @@ function buildSummary(pricingInfo){
     const destCity = document.getElementById('arrivalCity').selectedOptions[0]?.textContent || '';
 
 
-    contentDiv.innerText = `Departing ${deptCity}: ${dataStore.calendarDeparture} -> Arriving in ${destCity}: ${getNextMatchingDate(dataStore.calendarDeparture, dataStore.arrivalDow)}`;
+    contentDiv.innerText = `Departing ${deptCity}: ${dataStore.calendarDeparture} → Arriving in ${destCity}: ${getNextMatchingDate(dataStore.calendarDeparture, dataStore.arrivalDow)}`;
 
     if (dataStore.tripType === "roundTrip"){
-        contentDiv.innerText += `\nDeparting ${destCity}: ${dataStore.calendarReturn} -> Returning to ${deptCity}: ${getNextMatchingDate(dataStore.calendarReturn, dataStore.returnArrivalDow)}`;
+        contentDiv.innerText += `\nDeparting ${destCity}: ${dataStore.calendarReturn} → Returning to ${deptCity}: ${getNextMatchingDate(dataStore.calendarReturn, dataStore.returnArrivalDow)}`;
     }
 
     let ticketCounterList = [];
     let elementName;
     let ticketText = "\n\nTickets: ";
+    let luggageText = "\nTotal Luggage Limit: ";
+    let luggageNum = 0;
 
     pricingInfo.forEach( ageRange => {
         switch (ageRange.ticket_id) {
@@ -45,7 +55,8 @@ function buildSummary(pricingInfo){
 
         const checkElement = document.getElementById(elementName).value;
         if ( checkElement !== '0' ){
-            ticketCounterList.push(`${checkElement}x ${ageRange.ticket_id}`);
+            ticketCounterList.push(`${checkElement}x ${capitalizeFirstLetter(ageRange.ticket_id)}`);
+            luggageNum += ageRange.luggage_limit * checkElement;
         }
     });
 
@@ -57,13 +68,20 @@ function buildSummary(pricingInfo){
         }
     });
 
+    luggageText += `${luggageNum} lbs`;
+
     contentDiv.innerText += ticketText;
+    contentDiv.innerText += luggageText;
 }
 
-export function showTripSummary(pricingInfo) {
-    const summaryDiv = document.getElementById("tripSummary");
+/**
+ * 
+ * @param {String} string 
+ */
+function capitalizeFirstLetter( string ) {
+    const firstLetterCap = string.charAt(0).toUpperCase();
 
-    buildSummary(pricingInfo);
-    
-    summaryDiv.classList.remove("hidden");
+    const wordRemainder = string.substring(1);
+
+    return firstLetterCap + wordRemainder;
 }
