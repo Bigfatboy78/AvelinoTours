@@ -1,6 +1,7 @@
 import { resetCalendars, updateCalendarByDayOfWeek } from "./calendar.js";
-import { fetchCities, fetchStates, fetchSchedule, fetchPricing } from './fetch.js';
+import { sendEmail, normalizePhoneNumber, userEmail } from "./email.js";
 import { calculatePrice, setupCityChangeHandlers, setupStateCityDropdowns } from './event.js';
+import { fetchCities, fetchStates, fetchSchedule, fetchPricing } from './fetch.js';
 import { showTripSummary, updateSummary } from "./summary.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -61,7 +62,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     calculatePrice(pricingTable, info);
     showTripSummary(info);
   });
-  
+
+  document.getElementById("finalSubmit").addEventListener("click", async () => {
+    const name = document.getElementById("userName").value;
+    const phone = normalizePhoneNumber(document.getElementById("userPhone").value);
+    const summaryContent = document.getElementById("summaryContent").innerText;
+
+    const emailContent = `
+      Personal Contact: ${name}\n
+      Contact Phone Number: ${ phone }\n
+      Trip Summary: \n${ summaryContent }
+    `;
+
+    // Optional: Validate phone number
+    if (!phone || phone.length < 10) {
+      alert("Please enter a valid phone number with a proper area code and international number if required.");
+      return;
+    }
+
+    const response = await sendEmail(userEmail, emailContent);
+
+    if (response.ok) {
+      alert("Trip Submission Sent Successfully!");
+    } else {
+      alert(`Error: ${response.status} - Submission failed.`);
+      console.error(await response.text());
+    }
+  });
+
+  re_9WTzPkPg_LvMxvNVN3dsb7jcMXKE39hrP
 });
 
 /**
