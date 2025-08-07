@@ -1,3 +1,5 @@
+import { updateSummary } from "./summary.js";
+
 export function setupStateCityDropdowns(citiesByCountry, states) {
   document.getElementById('arrivalState').addEventListener('change', () => {
     updateCityOptions('arrivalState', 'arrivalCity', citiesByCountry, states);
@@ -30,13 +32,45 @@ export function calculatePrice(pricingTable, pricingInfo) {
     oneWayCost += parseInt(document.getElementById(elementName).value) * (100 - ageRange.price_reduction_percentage)/100 || 0;
   });
 
-
   if (basePrice !== null && oneWayCost > 0) {
       const total = basePrice * (tripType === "roundTrip" ? 2 : 1) * oneWayCost;
       priceOutput.textContent = `$${total.toFixed(2)}`;
   } else {
       priceOutput.textContent = "N/A";
   }
+}
+
+export function setupCityChangeHandlers(schedule, onCitiesSelected, reset) {
+  const departCitySelect = document.getElementById('departCity');
+  const arrivalCitySelect = document.getElementById('arrivalCity');
+
+  function tryFilterSchedule() {
+    const departureCity = departCitySelect.value;
+    const destinationCity = arrivalCitySelect.value;
+
+    if (departureCity && destinationCity) {
+      const [matchingDept, matchingDest] = filterSchedule(schedule, departureCity, destinationCity);
+
+      const [returnFromDest, returnToDepart] = filterSchedule(schedule, destinationCity, departureCity);
+
+      // Call the callback with day_of_week values
+      if (matchingDept && returnFromDest) {
+        onCitiesSelected(matchingDept, returnFromDest);
+        reset();
+        updateSummary({
+          'departDow': matchingDept.day_of_week,
+          'arrivalDow': matchingDest.day_of_week,
+          'returnDepartDow': returnFromDest.day_of_week,
+          'returnArrivalDow': returnToDepart.day_of_week,
+          'calendarDeparture': "",
+          'calendarReturn': ""
+        })
+      }
+    }
+  }
+
+  departCitySelect.addEventListener('change', tryFilterSchedule);
+  arrivalCitySelect.addEventListener('change', tryFilterSchedule);
 }
 
 /**
@@ -119,3 +153,38 @@ function getFare(pricingTable) {
   return null;
 }
 
+/**
+ * 
+ * @param {*} schedule 
+ * @param {string} departureCity 
+ * @param {string} destinationCity 
+ */
+function filterSchedule(schedule, departureCity, destinationCity){
+  const deptCitiesOptions = schedule.filter(
+    stop => stop.city_id === departureCity
+  );
+  const destCityOptions = schedule.filter(
+    stop => stop.city_id === destinationCity
+  );
+
+  let matchedDept = null;
+  let matchedDest = null;
+
+  for (const dept of deptCitiesOptions) {
+    const destOption = destCityOptions.find(dest =>
+      dest.direction === dept.direction &&
+      dest.stop_id > dept.stop_id
+    );
+
+    if (destOption) {
+      matchedDept = dept;
+      matchedDest = destOption;
+      break; // ✅ Found a match, exit the loop
+    }
+  }
+
+  console.log("Matched departure:", matchedDept);
+  console.log("Matched destination:", matchedDest);
+
+  return [ matchedDept, matchedDest ];
+}

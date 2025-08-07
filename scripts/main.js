@@ -1,5 +1,8 @@
+import { resetCalendars, updateCalendarByDayOfWeek } from "./calendar.js";
+import { sendEmail, normalizePhoneNumber } from "./email.js";
+import { calculatePrice, setupCityChangeHandlers, setupStateCityDropdowns } from './event.js';
 import { fetchCities, fetchStates, fetchSchedule, fetchPricing } from './fetch.js';
-import { calculatePrice, setupStateCityDropdowns } from './event.js';
+import { showTripSummary, updateSummary } from "./summary.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
   const [cities, states, schedule, info] = await Promise.all([
@@ -8,13 +11,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       fetchSchedule(),
       fetchPricing()
     ]);
-  console.log("Fetched Cities:", cities);
-  console.log("Fetched States:", states);
-  console.log("Fetched Schedule", schedule);
-  console.log("Fetched Info", info);
+  // console.log("Fetched Cities:", cities);
+  // console.log("Fetched States:", states);
+  // console.log("Fetched Schedule", schedule);
+  // console.log("Fetched Info", info);
 
   const arrivalSelect = document.getElementById('arrivalState');
   const departureSelect = document.getElementById('departState');
+  
+  let lastDepart, lastDest;
+  setupCityChangeHandlers(schedule, (depart, dest) => {
+    lastDepart = depart;
+    lastDest = dest;
+    const tripType = document.querySelector('input[name="tripType"]:checked').value;
+    updateCalendarByDayOfWeek(depart, dest, tripType);
+  }, () => resetCalendars());
+
+  document.querySelectorAll('input[name="tripType"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const tripType = radio.value;
+      if (lastDepart && lastDest) {
+        updateCalendarByDayOfWeek(lastDepart, lastDest, tripType);
+      }
+      updateSummary({'tripType': tripType});
+    });
+  });
 
   states.forEach(state => {
       // Create separate <option> elements for each dropdown
@@ -28,25 +49,42 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       arrivalSelect.appendChild(arrivalOption);
       departureSelect.appendChild(departureOption);
-      });
+  });
 
   const citiesByCountry = buildCitiesByCountry(states, cities);
   const pricingTable = buildPricingTable(cities, states);
-  console.log("Listed pricingTable: ", pricingTable)
+  // console.log("Listed pricingTable: ", pricingTable)
   setupStateCityDropdowns(citiesByCountry, states);
-
-  toggleReturnDate();
-  // Ensure trip type radio buttons are wired
-  document.querySelectorAll('.trip-radio').forEach(radio => {
-      radio.addEventListener('change', toggleReturnDate);
-  });
 
   const form = document.getElementById('fareForm');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     calculatePrice(pricingTable, info);
+    showTripSummary(info);
   });
-  
+
+  document.getElementById("finalSubmit").addEventListener("click", async () => {
+    const name = document.getElementById("userName").value;
+    const phone = normalizePhoneNumber(document.getElementById("userPhone").value);
+    const summaryContent = document.getElementById("summaryContent").innerText;
+    const cost = document.getElementById("priceOutput").innerText;
+
+    const emailContent = `
+      <b>Contact Name: ${name}</b><br>
+      <b>Contact Phone Number: ${ phone }</b><br>
+      <b>Total Cost: ${cost}</b><br>
+      <b>Trip Summary:</b> <br>${ summaryContent }
+    `;
+
+    // Optional: Validate phone number
+    if (!phone || phone.length < 10) {
+      alert("Please enter a valid phone number with a proper area code and international number if required.");
+      return;
+    }
+
+    await sendEmail(emailContent.trim().replace( /\n/g, "<br>"));
+  });
+
 });
 
 /**
@@ -112,21 +150,6 @@ function buildPricingTable(cities, states){
     return pricingTable;
 }
 
-let flatpickrInstance = null;
-/**
- * Changes the mode variant of the calendar, flipping between single date and value range depending
- * on the selected Radio Button
- */
-function toggleReturnDate() {
-    const selectedTripType = document.querySelector('input[name="tripType"]:checked').value;
 
-  if (flatpickrInstance) {
-    flatpickrInstance.destroy();
-  }
 
-  flatpickrInstance = flatpickr("#datePicker", {
-    mode: selectedTripType === "roundTrip" ? "range" : "single",
-    dateFormat: "M-d (D)",
-  });
-}
 
