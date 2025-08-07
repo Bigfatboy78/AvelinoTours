@@ -1,5 +1,5 @@
 import { resetCalendars, updateCalendarByDayOfWeek } from "./calendar.js";
-import { sendEmail, normalizePhoneNumber, userEmail } from "./email.js";
+import { sendEmail, normalizePhoneNumber } from "./email.js";
 import { calculatePrice, setupCityChangeHandlers, setupStateCityDropdowns } from './event.js';
 import { fetchCities, fetchStates, fetchSchedule, fetchPricing } from './fetch.js';
 import { showTripSummary, updateSummary } from "./summary.js";
@@ -67,11 +67,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const name = document.getElementById("userName").value;
     const phone = normalizePhoneNumber(document.getElementById("userPhone").value);
     const summaryContent = document.getElementById("summaryContent").innerText;
+    const cost = document.getElementById("priceOutput").innerText;
 
     const emailContent = `
-      Personal Contact: ${name}\n
-      Contact Phone Number: ${ phone }\n
-      Trip Summary: \n${ summaryContent }
+      <b>Contact Name: ${name}</b><br>
+      <b>Contact Phone Number: ${ phone }</b><br>
+      <b>Total Cost: ${cost}</b><br>
+      <b>Trip Summary:</b> <br>${ summaryContent }
     `;
 
     // Optional: Validate phone number
@@ -80,17 +82,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const response = await sendEmail(userEmail, emailContent);
-
-    if (response.ok) {
-      alert("Trip Submission Sent Successfully!");
-    } else {
-      alert(`Error: ${response.status} - Submission failed.`);
-      console.error(await response.text());
-    }
+    await sendEmail(emailContent.trim().replace( /\n/g, "<br>"));
   });
 
-  re_9WTzPkPg_LvMxvNVN3dsb7jcMXKE39hrP
 });
 
 /**

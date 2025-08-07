@@ -28,16 +28,17 @@ function buildSummary(pricingInfo){
     const deptCity = document.getElementById('departCity').selectedOptions[0]?.textContent || '';
     const destCity = document.getElementById('arrivalCity').selectedOptions[0]?.textContent || '';
 
+    let allText;
 
-    contentDiv.innerText = `Departing ${deptCity}: ${dataStore.calendarDeparture} → Arriving in ${destCity}: ${getNextMatchingDate(dataStore.calendarDeparture, dataStore.arrivalDow)}`;
+    allText = `Departing ${deptCity}: ${dataStore.calendarDeparture} → Arriving in ${destCity}: ${getNextMatchingDate(dataStore.calendarDeparture, dataStore.arrivalDow)}`;
 
     if (dataStore.tripType === "roundTrip"){
-        contentDiv.innerText += `\nDeparting ${destCity}: ${dataStore.calendarReturn} → Returning to ${deptCity}: ${getNextMatchingDate(dataStore.calendarReturn, dataStore.returnArrivalDow)}`;
+        allText += `\nDeparting ${destCity}: ${dataStore.calendarReturn} → Returning to ${deptCity}: ${getNextMatchingDate(dataStore.calendarReturn, dataStore.returnArrivalDow)}`;
     }
 
     let ticketCounterList = [];
     let elementName;
-    let ticketText = "\n\nTickets: ";
+    let ticketText = "Tickets: ";
     let luggageText = "\nTotal Luggage Limit: ";
     let luggageNum = 0;
 
@@ -70,8 +71,10 @@ function buildSummary(pricingInfo){
 
     luggageText += `${luggageNum} lbs`;
 
-    contentDiv.innerText += ticketText;
-    contentDiv.innerText += luggageText;
+    allText += '\n' + ticketText;
+    allText += luggageText;
+
+    contentDiv.innerText = allText;
 }
 
 /**

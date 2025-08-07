@@ -1,18 +1,32 @@
-export let userEmail = "trey.pubins@gmail.com";
-
-export async function sendEmail( userEmail, summaryHtml ) {
+export async function sendEmail( summaryHtml ) {
     const payload = {
-    to: userEmail,
-    subject: "Your Booking Summary",
-    html: summaryHtml
+        subject: "Your Booking Summary",
+        html: summaryHtml
     };
 
-    await fetch("https://ltuyotcnmytiffsznxvd.supabase.co/functions/v1/sendBookingEmail", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-    });
-}
+    try {
+        const res = await fetch("https://ltuyotcnmytiffsznxvd.supabase.co/functions/v1/sendBookingEmail", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+                // "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0dXlvdGNubXl0aWZmc3pueHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0NTIzMzksImV4cCI6MjA2OTAyODMzOX0.UD6SQlOnl8bMF8KoA5ke4IWIReKRjPH5mZR-vGGN_wA"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            console.error("Failed to send email:", res.status, data);
+            alert("Submission Failure. Please reload the page and try again. If the problem persists please click the Contact Page and talk with our Sales Representative.")
+        } else {
+            console.log("Email sent:", data);
+            alert("Submission Successful! A Sales Representative will contact you shortly confirming the details.")
+        }
+    } catch (err) {
+        alert("Something has gone wrong with the connection. Please reload the page and try again. If the problem persists please click the Contact Page and talk with our Sales Representative.")
+        console.error("Network error sending email:", err);
+    }
+}   
 
 /**
  * 
