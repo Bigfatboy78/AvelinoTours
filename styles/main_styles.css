@@ -1,0 +1,56 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+header {
+  background-color: #004080;
+  color: white;
+  text-align: center;
+  padding: 20px 0;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+nav {
+  background-color: #0066cc;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* Tooltip classes rewritten without @apply */
+.tooltip {
+  position: absolute;
+  left: 250%;
+  bottom: 25%;
+  margin-top: 0.25rem;
+  width: max-content;
+  max-width: 20rem;
+  transform: translateX(-50%);
+  background-color: #1f2937; /* bg-gray-800 */
+  color: white;
+  font-size: 0.875rem; /* text-sm */
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.group:hover .tooltip {
+  opacity: 1;
+}

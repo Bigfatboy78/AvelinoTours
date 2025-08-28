@@ -1,31 +1,99 @@
-import { fetchCities, fetchStates } from './city_fetch.js';
-import { setupStateCityDropdowns } from './event.js';
+import { resetCalendars, updateCalendarByDayOfWeek } from "./calendar.js";
+import { sendEmail, normalizePhoneNumber } from "./email.js";
+import { calculatePrice, setupCityChangeHandlers, setupStateCityDropdowns } from './event.js';
+import { fetchCities, fetchStates, fetchSchedule, fetchPricing } from './fetch.js';
+import { showTripSummary, updateSummary } from "./summary.js";
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const cities = await fetchCities();
-  const states = await fetchStates();
-
-  console.log("Fetched Cities:", cities);
-  console.log("Fetched States:", states);
+  const [cities, states, schedule, info] = await Promise.all([
+      fetchCities(),
+      fetchStates(),
+      fetchSchedule(),
+      fetchPricing()
+    ]);
+  // console.log("Fetched Cities:", cities);
+  // console.log("Fetched States:", states);
+  // console.log("Fetched Schedule", schedule);
+  // console.log("Fetched Info", info);
 
   const arrivalSelect = document.getElementById('arrivalState');
   const departureSelect = document.getElementById('departState');
+  
+  let lastDepart, lastDest;
+  setupCityChangeHandlers(schedule, (depart, dest) => {
+    lastDepart = depart;
+    lastDest = dest;
+    const tripType = document.querySelector('input[name="tripType"]:checked').value;
+    updateCalendarByDayOfWeek(depart, dest, tripType);
+  }, () => resetCalendars());
+
+  document.querySelectorAll('input[name="tripType"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const tripType = radio.value;
+      if (lastDepart && lastDest) {
+        updateCalendarByDayOfWeek(lastDepart, lastDest, tripType);
+      }
+      updateSummary({'tripType': tripType});
+    });
+  });
 
   states.forEach(state => {
-    // Create separate <option> elements for each dropdown
-    const arrivalOption = document.createElement('option');
-    arrivalOption.value = state.state_name;
-    arrivalOption.textContent = state.state_name;
+      // Create separate <option> elements for each dropdown
+      const arrivalOption = document.createElement('option');
+      arrivalOption.value = state.state_name;
+      arrivalOption.textContent = state.state_name;
 
-    const departureOption = document.createElement('option');
-    departureOption.value = state.state_name;
-    departureOption.textContent = state.state_name;
+      const departureOption = document.createElement('option');
+      departureOption.value = state.state_name;
+      departureOption.textContent = state.state_name;
 
-    arrivalSelect.appendChild(arrivalOption);
-    departureSelect.appendChild(departureOption);
-    });
+      arrivalSelect.appendChild(arrivalOption);
+      departureSelect.appendChild(departureOption);
+  });
 
-  function buildCitiesByCountry(states, cities) {
+  const citiesByCountry = buildCitiesByCountry(states, cities);
+  const pricingTable = buildPricingTable(cities, states);
+  // console.log("Listed pricingTable: ", pricingTable)
+  setupStateCityDropdowns(citiesByCountry, states);
+
+  const form = document.getElementById('fareForm');
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    calculatePrice(pricingTable, info);
+    showTripSummary(info);
+  });
+
+  document.getElementById("finalSubmit").addEventListener("click", async () => {
+    const name = document.getElementById("userName").value;
+    const phone = normalizePhoneNumber(document.getElementById("userPhone").value);
+    const summaryContent = document.getElementById("summaryContent").innerText;
+    const cost = document.getElementById("priceOutput").innerText;
+
+    const emailContent = `
+      <b>Contact Name: ${name}</b><br>
+      <b>Contact Phone Number: ${ phone }</b><br>
+      <b>Total Cost: ${cost}</b><br>
+      <b>Trip Summary:</b> <br>${ summaryContent }
+    `;
+
+    // Optional: Validate phone number
+    if (!phone || phone.length < 10) {
+      alert("Please enter a valid phone number with a proper area code and international number if required.");
+      return;
+    }
+
+    await sendEmail(emailContent.trim().replace( /\n/g, "<br>"));
+  });
+
+});
+
+/**
+ * Build a mapped dictionary of countries that contain each of the cities found in each
+ * @param {Object} states - a States object pulled from the db
+ * @param {Object} cities - a Cities object pulled from the db 
+ * @returns {Object.<string, string[]>} - a dictionary with countries visited as the keys and an array list of city names as the values
+ */
+function buildCitiesByCountry(states, cities) {
     const citiesByCountry = {};
 
     // First, group states by country
@@ -58,65 +126,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     return citiesByCountry;
-  }
-
-  const citiesByCountry = buildCitiesByCountry(states, cities);
-
-  setupStateCityDropdowns(citiesByCountry, states);
-});
-
-
-// const pricingTable = {
-
-// };
+}
 
 /**
- * Get fare price regardless of order (USA → Mexico or Mexico → USA)
- * @returns {number|null} - Price or null if not found
+ * Builds a mapped dictionary of cities with the cost associations traveling to each of the Mexican states visited.
+ * @param {Object} states - a States object pulled from the db
+ * @param {Object} cities - a Cities object pulled from the db 
+ * @returns {Object.<string, string[]>} - a dictionary with city names as the keys and a dictionary of prices to Mexican states as well as the city's country as the values
  */
-function getFare() {
-    const departureCity = document.getElementById("departCity").value;
-    const departureState = document.getElementById("departState").value;
-    const destinationCity = document.getElementById("arrivalCity").value;
-    const destinationState = document.getElementById("arrivalState").value;
+function buildPricingTable(cities, states){
+    const pricingTable = {};
+    
+    cities.forEach(city => {
+        const selectedCountry = states.find(state => state.state_id === city.state_id);
+        pricingTable[city.city_id] = {
+            "Chihuahua": city.price_to_chihuahua,
+            "Durango": city.price_to_durango,
+            "Zacatecas": city.price_to_zacatecas,
+            "Country": selectedCountry.country
+        };
+    });
 
-    // Try direct lookup (USA → Mexico)
-    if (pricingTable[departureCity] && pricingTable[departureCity][destinationState] !== undefined) {
-    return pricingTable[departureCity][destinationState];
-    }
-
-    // Try reversed lookup (Mexico → USA)
-    for (const [usaCity, mexicoStates] of Object.entries(pricingTable)) {
-        if (mexicoStates[departureState] !== undefined && usaCity === destinationCity) {
-            return mexicoStates[departureState];
-        }
-    }
-
-    return null; // Not found
-}
-
-function calculatePrice() {
-    const basePrice = getFare();
-    const priceOutput = document.getElementById("priceOutput");
-    const tripType = document.querySelector('input[name="tripType"]:checked').value;
-
-    const numKids = parseInt(document.getElementById("numKids").value) * 0.5 || 0;
-    const numAdults = parseInt(document.getElementById("numAdults").value) || 0;
-    const numElderly = parseInt(document.getElementById("numElderly").value) * 0.9 || 0;
-
-    const totalPassengers = numKids + numAdults + numElderly;
-
-    if (basePrice !== null && totalPassengers > 0) {
-        const total = basePrice * (tripType === "roundTrip" ? 2 : 1) * totalPassengers;
-        priceOutput.textContent = `$${total.toFixed(2)}`;
-    } else {
-        priceOutput.textContent = "N/A";
-    }
+    return pricingTable;
 }
 
 
-function toggleReturnDate() {
-    const tripType = document.querySelector('input[name="tripType"]:checked').value;
-    const returnDateDiv = document.getElementById("returnDateContainer");
-    returnDateDiv.style.display = tripType === "roundTrip" ? "block" : "none";
-}
+
+

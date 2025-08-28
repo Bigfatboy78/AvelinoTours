@@ -23,3 +23,23 @@ export async function fetchStates() {
   return data;
 }
 
+export async function fetchSchedule() {
+  const { data, error } = await client.from('BusSchedule').select('*');
+  if (error) {
+    console.error('Supabase fetch error (Schedule):', error);
+    return [];
+  }
+  console.log("BusSchedule fetch successful.");
+  return data;
+}
+
+export async function fetchPricing() {
+  const { data, error } = await client.from('PricingInfo').select('*');
+  if (error) {
+    console.error('Supabase fetch error (Pricing):', error);
+    return [];
+  }
+  console.log("PricingInfo fetch successful.");
+  return data;
+}
+
