@@ -9,7 +9,6 @@ export async function sendEmail( summaryHtml ) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
-                // "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0dXlvdGNubXl0aWZmc3pueHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0NTIzMzksImV4cCI6MjA2OTAyODMzOX0.UD6SQlOnl8bMF8KoA5ke4IWIReKRjPH5mZR-vGGN_wA"
             },
             body: JSON.stringify(payload)
         });
